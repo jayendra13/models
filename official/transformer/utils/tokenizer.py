@@ -1,6 +1,6 @@
 import sentencepiece as spm
 subtokenizer = spm.SentencePieceProcessor()
-subtokenizer.load("/home/jayendra/lab/models/official/transformer/data/coco.model")
+subtokenizer.load("/content/coco.model")
 
 EOS_ID = subtokenizer.eos_id()
 
