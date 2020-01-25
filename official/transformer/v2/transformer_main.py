@@ -112,7 +112,8 @@ def evaluate_and_log_bleu(model,
     uncased_score: A float, the case insensitive BLEU score.
     cased_score: A float, the case sensitive BLEU score.
   """
-  subtokenizer = tokenizer.Subtokenizer(vocab_file)
+  # subtokenizer = tokenizer.Subtokenizer(vocab_file)
+  subtokenizer = tokenizer.subtokenizer
 
   uncased_score, cased_score = translate_and_compute_bleu(
       model, params, subtokenizer, bleu_source, bleu_ref, distribution_strategy)
@@ -392,7 +393,8 @@ class TransformerTask(object):
       self._load_weights_if_possible(
           model, tf.train.latest_checkpoint(self.flags_obj.model_dir))
       model.summary()
-    subtokenizer = tokenizer.Subtokenizer(flags_obj.vocab_file)
+    # subtokenizer = tokenizer.Subtokenizer(flags_obj.vocab_file)
+    subtokenizer = tokenizer.subtokenizer
 
     ds = data_pipeline.eval_input_fn(params)
     ds = ds.map(lambda x, y: x).take(_SINGLE_SAMPLE)
