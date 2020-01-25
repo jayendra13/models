@@ -2,6 +2,8 @@ import sentencepiece as spm
 subtokenizer = spm.SentencePieceProcessor()
 subtokenizer.load("/content/coco.model")
 
+subtokenizer.encode = subtokenizer.encode_as_ids
+subtokenizer.decode = subtokenizer.decode_ids
 EOS_ID = subtokenizer.eos_id()
 
 # # Copyright 2018 The TensorFlow Authors. All Rights Reserved.
@@ -206,16 +208,16 @@ EOS_ID = subtokenizer.eos_id()
 #         continue
 #       subtoken_list.append(native_to_unicode(subtoken))
 #   return reserved_tokens + subtoken_list
-#
-#
-# def native_to_unicode(s):
-#   """Convert string to unicode (required in Python 2)."""
-#   try:               # Python 2
-#     return s if isinstance(s, unicode) else s.decode("utf-8")
-#   except NameError:  # Python 3
-#     return s
-#
-#
+
+
+def native_to_unicode(s):
+  """Convert string to unicode (required in Python 2)."""
+  try:               # Python 2
+    return s if isinstance(s, unicode) else s.decode("utf-8")
+  except NameError:  # Python 3
+    return s
+
+
 # def _unicode_to_native(s):
 #   """Convert string from unicode to native format (required in Python 2)."""
 #   try:               # Python 2
