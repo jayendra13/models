@@ -24,7 +24,7 @@ from __future__ import print_function
 import tensorflow as tf
 
 from official.nlp.transformer import model_utils
-from official.transformer.utils.tokenizer import EOS_ID
+from official.transformer.utils.tokenizer import EOS_ID, PAD_ID
 from official.transformer.v2 import attention_layer
 from official.transformer.v2 import beam_search
 from official.transformer.v2 import embedding_layer
@@ -138,7 +138,7 @@ class Transformer(tf.keras.Model):
     with tf.name_scope("Transformer"):
       # Calculate attention bias for encoder self-attention and decoder
       # multi-headed attention layers.
-      attention_bias = model_utils.get_padding_bias(inputs)
+      attention_bias = model_utils.get_padding_bias(inputs, padding_value=PAD_ID)
 
       # Run the inputs through the encoder layer to map the symbol
       # representations to continuous representations.
@@ -167,7 +167,7 @@ class Transformer(tf.keras.Model):
       # applying dropout.
       embedded_inputs = self.embedding_softmax_layer(inputs)
       embedded_inputs = tf.cast(embedded_inputs, self.params["dtype"])
-      inputs_padding = model_utils.get_padding(inputs)
+      inputs_padding = model_utils.get_padding(inputs, PAD_ID)
       attention_bias = tf.cast(attention_bias, self.params["dtype"])
 
       with tf.name_scope("add_pos_encoding"):

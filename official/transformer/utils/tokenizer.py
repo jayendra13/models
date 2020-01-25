@@ -4,7 +4,9 @@ subtokenizer.load("/content/coco.model")
 
 subtokenizer.encode = subtokenizer.encode_as_ids
 subtokenizer.decode = subtokenizer.decode_ids
+
 EOS_ID = subtokenizer.eos_id()
+PAD_ID = subtokenizer.pad_id()
 
 # # Copyright 2018 The TensorFlow Authors. All Rights Reserved.
 # #
