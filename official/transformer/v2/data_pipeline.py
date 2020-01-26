@@ -59,7 +59,7 @@ import tensorflow as tf
 
 from official.transformer.v2 import misc
 from official.utils.misc import model_helpers
-
+from official.transformer.utils import tokenizer
 # Buffer size for reading records from a TFRecord file. Each training file is
 # 7.2 MB, so 8 MB allows an entire file to be kept in memory.
 _READ_RECORD_BUFFER = 8 * 1000 * 1000
