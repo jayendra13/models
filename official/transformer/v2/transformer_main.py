@@ -51,7 +51,7 @@ BLEU_DIR = "bleu"
 _SINGLE_SAMPLE = 1
 
 
-def translate_and_compute_bleu(model,
+def translate_and_compute_metrics(model,
                                params,
                                subtokenizer,
                                bleu_source,
@@ -74,6 +74,25 @@ def translate_and_compute_bleu(model,
     cased_score: A float, the case sensitive BLEU score.
   """
   # Create temporary file to store translation.
+  def _pad_tensors_to_same_length(x, y):
+      """Pad x and y so that the results have the same length (second dimension)."""
+      x_length = tf.shape(x)[1]
+      y_length = tf.shape(y)[1]
+
+      max_length = tf.maximum(x_length, y_length)
+
+      x = tf.pad(x, [[0, 0], [0, max_length - x_length], [0, 0]])
+      y = tf.pad(y, [[0, 0], [0, max_length - y_length]])
+      return x, y
+
+  def padded_accuracy(predicted_ids, labels):
+      """Percentage of times that predictions matches labels on non-0s."""
+      outputs, labels = _pad_tensors_to_same_length(predicted_ids, labels)
+      weights = tf.to_float(tf.not_equal(labels, 0))
+          # outputs = tf.to_int32(tf.argmax(logits, axis=-1))
+      padded_labels = tf.to_int32(labels)
+      return tf.to_float(tf.equal(outputs, padded_labels)), weights
+
   tmp_filename = 'prediction.txt'
 
   translate.translate_file(
@@ -85,11 +104,25 @@ def translate_and_compute_bleu(model,
       print_all_translations=False,
       distribution_strategy=distribution_strategy)
 
+  with open(tmp_filename,'r') as f:
+      predicted_text = f.readlines()
+
+  with open(bleu_ref, 'r') as f:
+      gt_text = f.readlines()
+
+  predicted_lines = [subtokenizer.encode(line) for line in predicted_text]
+  gt_lines = [subtokenizer.encode(line) for line in gt_text]
+  accuracy = padded_accuracy(predicted_lines,gt_lines)
+
+
+
+
   # Compute uncased and cased bleu scores.
+
   uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
   cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
   # os.remove(tmp_filename)
-  return uncased_score, cased_score
+  return uncased_score, cased_score, accuracy
 
 
 def evaluate_and_log_bleu(model,
@@ -116,12 +149,13 @@ def evaluate_and_log_bleu(model,
   # subtokenizer = tokenizer.Subtokenizer(vocab_file)
   subtokenizer = tokenizer.subtokenizer
 
-  uncased_score, cased_score = translate_and_compute_bleu(
+  uncased_score, cased_score, accuracy = translate_and_compute_bleu(
       model, params, subtokenizer, bleu_source, bleu_ref, distribution_strategy)
 
   logging.info("Bleu score (uncased): %s", uncased_score)
   logging.info("Bleu score (cased): %s", cased_score)
-  return uncased_score, cased_score
+  logging.info("Accuracy : %s", accuracy)
+  return uncased_score, cased_score, accuracy
 
 
 class TransformerTask(object):
