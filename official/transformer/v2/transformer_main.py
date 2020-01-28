@@ -78,7 +78,7 @@ def translate_and_compute_metrics(model,
 
   def padded_accuracy(predicted_ids, labels):
       """Percentage of times that predictions matches labels on non-0s."""
-      weights = tf.to_float(tf.not_equal(labels, 0))
+      weights = tf.cast(tf.not_equal(labels, 0),tf.float32)
           # outputs = tf.to_int32(tf.argmax(logits, axis=-1))
       labels = tf.to_int32(labels)
       m = tf.keras.metrics.Accuracy()
