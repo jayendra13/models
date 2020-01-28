@@ -76,14 +76,20 @@ def translate_and_compute_metrics(model,
   # Create temporary file to store translation.
   def _pad_tensors_to_same_length(x, y):
       """Pad x and y so that the results have the same length (second dimension)."""
-      x_length = tf.shape(x)[1]
-      y_length = tf.shape(y)[1]
+      new_x = []
+      new_y = []
+      for idx, x_ in enumerate(x):
+        y_ = y[idx]
+        x_length = tf.shape(x_)[1]
+        y_length = tf.shape(y_)[1]
 
-      max_length = tf.maximum(x_length, y_length)
+        max_length = tf.maximum(x_length, y_length)
 
-      x = tf.pad(x, [[0, 0], [0, max_length - x_length], [0, 0]])
-      y = tf.pad(y, [[0, 0], [0, max_length - y_length]])
-      return x, y
+        x_ = tf.pad(x_, [[0, 0], [0, max_length - x_length], [0, 0]])
+        y_ = tf.pad(y_, [[0, 0], [0, max_length - y_length]])
+        new_x[idx] = x_
+        new_y[idx] = y_
+      return new_x, new_y
 
   def padded_accuracy(predicted_ids, labels):
       """Percentage of times that predictions matches labels on non-0s."""
