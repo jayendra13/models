@@ -80,7 +80,7 @@ def translate_and_compute_metrics(model,
       """Percentage of times that predictions matches labels on non-0s."""
       weights = tf.cast(tf.not_equal(labels, 0),tf.float32)
           # outputs = tf.to_int32(tf.argmax(logits, axis=-1))
-      labels = tf.to_int32(labels)
+      labels = tf.cast(labels,tf.float32)
       m = tf.keras.metrics.Accuracy()
       _ = m.update_state(labels, predicted_ids, sample_weights=weights)
       return m.result().numpy()
