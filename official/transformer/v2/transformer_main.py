@@ -74,30 +74,16 @@ def translate_and_compute_metrics(model,
     cased_score: A float, the case sensitive BLEU score.
   """
   # Create temporary file to store translation.
-  def _pad_tensors_to_same_length(x, y):
-      """Pad x and y so that the results have the same length (second dimension)."""
-      new_x = []
-      new_y = []
-      for idx, x_ in enumerate(x):
-        y_ = y[idx]
-        x_length = tf.shape(x_)[1]
-        y_length = tf.shape(y_)[1]
 
-        max_length = tf.maximum(x_length, y_length)
-
-        x_ = tf.pad(x_, [[0, 0], [0, max_length - x_length], [0, 0]])
-        y_ = tf.pad(y_, [[0, 0], [0, max_length - y_length]])
-        new_x[idx] = x_
-        new_y[idx] = y_
-      return new_x, new_y
 
   def padded_accuracy(predicted_ids, labels):
       """Percentage of times that predictions matches labels on non-0s."""
-      outputs, labels = _pad_tensors_to_same_length(predicted_ids, labels)
       weights = tf.to_float(tf.not_equal(labels, 0))
           # outputs = tf.to_int32(tf.argmax(logits, axis=-1))
-      padded_labels = tf.to_int32(labels)
-      return tf.to_float(tf.equal(outputs, padded_labels)), weights
+      labels = tf.to_int32(labels)
+      m = tf.keras.metrics.Accuracy()
+      _ = m.update_state(labels, predicted_ids, sample_weights=weights)
+      return m.result().numpy()
 
   tmp_filename = 'prediction.txt'
 
@@ -118,7 +104,20 @@ def translate_and_compute_metrics(model,
 
   predicted_lines = [subtokenizer.encode(line) for line in predicted_text]
   gt_lines = [subtokenizer.encode(line) for line in gt_text]
-  accuracy = padded_accuracy(predicted_lines,gt_lines)
+
+  padded_predicted_lines = tf.keras.preprocessing.sequence.pad_sequences(
+      predicted_lines,
+      maxlen=params["decode_max_length"],
+      dtype="int32",
+      padding="post")
+
+  padded_gt_lines = tf.keras.preprocessing.sequence.pad_sequences(
+      gt_lines,
+      maxlen=params["decode_max_length"],
+      dtype="int32",
+      padding="post")
+
+  accuracy = padded_accuracy(padded_predicted_lines,padded_gt_lines)
 
 
 
