@@ -74,8 +74,7 @@ def translate_and_compute_bleu(model,
     cased_score: A float, the case sensitive BLEU score.
   """
   # Create temporary file to store translation.
-  tmp = tempfile.NamedTemporaryFile(delete=False)
-  tmp_filename = tmp.name
+  tmp_filename = 'prediction.txt'
 
   translate.translate_file(
       model,
@@ -89,7 +88,7 @@ def translate_and_compute_bleu(model,
   # Compute uncased and cased bleu scores.
   uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
   cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
-  os.remove(tmp_filename)
+  # os.remove(tmp_filename)
   return uncased_score, cased_score
 
 
