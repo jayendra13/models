@@ -82,7 +82,7 @@ def translate_and_compute_metrics(model,
           # outputs = tf.to_int32(tf.argmax(logits, axis=-1))
       labels = tf.cast(labels,tf.float32)
       m = tf.keras.metrics.Accuracy()
-      _ = m.update_state(labels, predicted_ids, sample_weights=weights)
+      _ = m.update_state(labels, predicted_ids, sample_weight=weights)
       return m.result().numpy()
 
   tmp_filename = 'prediction.txt'
