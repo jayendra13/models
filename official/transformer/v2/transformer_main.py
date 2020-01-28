@@ -149,7 +149,7 @@ def evaluate_and_log_bleu(model,
   # subtokenizer = tokenizer.Subtokenizer(vocab_file)
   subtokenizer = tokenizer.subtokenizer
 
-  uncased_score, cased_score, accuracy = translate_and_compute_bleu(
+  uncased_score, cased_score, accuracy = translate_and_compute_metrics(
       model, params, subtokenizer, bleu_source, bleu_ref, distribution_strategy)
 
   logging.info("Bleu score (uncased): %s", uncased_score)
