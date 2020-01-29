@@ -92,7 +92,7 @@ def translate_and_compute_metrics(model,
   parseble_precentage = extra_metrics.parseable_percentage(tmp_filename)
 
   logdir = os.path.join(params["model_dir"], "text")
-  extra_utils.log_predictions_to_tensorboard(logdir, bleu_source, bleu_ref, tmp_filename, subtokenizer)
+  extra_utils.log_predictions_to_tensorboard(logdir, bleu_source, bleu_ref, tmp_filename)
   # Compute uncased and cased bleu scores.
 
   uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
