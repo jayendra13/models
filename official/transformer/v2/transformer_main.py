@@ -41,6 +41,8 @@ from official.transformer.v2 import misc
 from official.transformer.v2 import optimizer
 from official.transformer.v2 import transformer
 from official.transformer.v2 import translate
+from official.transformer.v2 import extra_metrics
+from official.transformer.v2 import extra_utils
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.utils.misc import keras_utils
@@ -75,16 +77,6 @@ def translate_and_compute_metrics(model,
   """
   # Create temporary file to store translation.
 
-
-  def padded_accuracy(predicted_ids, labels):
-      """Percentage of times that predictions matches labels on non-0s."""
-      weights = tf.cast(tf.not_equal(labels, 0),tf.float32)
-          # outputs = tf.to_int32(tf.argmax(logits, axis=-1))
-      labels = tf.cast(labels,tf.float32)
-      m = tf.keras.metrics.Accuracy()
-      _ = m.update_state(labels, predicted_ids, sample_weight=weights)
-      return m.result().numpy()
-
   tmp_filename = 'prediction.txt'
 
   translate.translate_file(
@@ -96,38 +88,17 @@ def translate_and_compute_metrics(model,
       print_all_translations=False,
       distribution_strategy=distribution_strategy)
 
-  with open(tmp_filename,'r') as f:
-      predicted_text = f.readlines()
+  accuracy = extra_metrics.compute_accuracy(tmp_filename, bleu_ref, subtokenizer, params)
+  parseble_precentage = extra_metrics.parseable_percentage(tmp_filename)
 
-  with open(bleu_ref, 'r') as f:
-      gt_text = f.readlines()
-
-  predicted_lines = [subtokenizer.encode(line) for line in predicted_text]
-  gt_lines = [subtokenizer.encode(line) for line in gt_text]
-
-  padded_predicted_lines = tf.keras.preprocessing.sequence.pad_sequences(
-      predicted_lines,
-      maxlen=params["decode_max_length"],
-      dtype="int32",
-      padding="post")
-
-  padded_gt_lines = tf.keras.preprocessing.sequence.pad_sequences(
-      gt_lines,
-      maxlen=params["decode_max_length"],
-      dtype="int32",
-      padding="post")
-
-  accuracy = padded_accuracy(padded_predicted_lines,padded_gt_lines)
-
-
-
-
+  logdir = os.path.join(params["model_dir"], "text")
+  extra_utils.log_predictions_to_tensorboard(logdir, bleu_source, bleu_ref, tmp_filename, subtokenizer)
   # Compute uncased and cased bleu scores.
 
   uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
   cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
   # os.remove(tmp_filename)
-  return uncased_score, cased_score, accuracy
+  return uncased_score, cased_score, accuracy, parseble_precentage
 
 
 def evaluate_and_log_bleu(model,
@@ -154,12 +125,13 @@ def evaluate_and_log_bleu(model,
   # subtokenizer = tokenizer.Subtokenizer(vocab_file)
   subtokenizer = tokenizer.subtokenizer
 
-  uncased_score, cased_score, accuracy = translate_and_compute_metrics(
+  uncased_score, cased_score, accuracy, parseble_precentage = translate_and_compute_metrics(
       model, params, subtokenizer, bleu_source, bleu_ref, distribution_strategy)
 
   logging.info("Bleu score (uncased): %s", uncased_score)
   logging.info("Bleu score (cased): %s", cased_score)
   logging.info("Accuracy : %s", accuracy)
+  logging.info("Percent of examples which can be parse: %s", parseble_precentage)
   return uncased_score, cased_score, accuracy
 
 
