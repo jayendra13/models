@@ -90,6 +90,8 @@ def translate_and_compute_metrics(model,
 
   accuracy = extra_metrics.compute_accuracy(tmp_filename, bleu_ref, subtokenizer, params)
   parseble_precentage = extra_metrics.parseable_percentage(tmp_filename)
+  rouge_bigram = extra_metrics.bigram_rouge(tmp_filename, bleu_ref, subtokenizer)
+  rouge_sentence_level = extra_metrics.sentence_level_rouge(tmp_filename, bleu_ref, subtokenizer)
 
   logdir = os.path.join(params["model_dir"], "text")
   extra_utils.log_predictions_to_tensorboard(logdir, bleu_source, bleu_ref, tmp_filename)
@@ -98,7 +100,7 @@ def translate_and_compute_metrics(model,
   uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
   cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
   # os.remove(tmp_filename)
-  return uncased_score, cased_score, accuracy, parseble_precentage
+  return uncased_score, cased_score, accuracy, parseble_precentage, rouge_bigram, rouge_sentence_level
 
 
 def evaluate_and_log_bleu(model,
@@ -125,13 +127,16 @@ def evaluate_and_log_bleu(model,
   # subtokenizer = tokenizer.Subtokenizer(vocab_file)
   subtokenizer = tokenizer.subtokenizer
 
-  uncased_score, cased_score, accuracy, parseble_precentage = translate_and_compute_metrics(
+  uncased_score, cased_score, accuracy, parseble_precentage, bigram_rouge, rouge_sentence_level = \
+    translate_and_compute_metrics(
       model, params, subtokenizer, bleu_source, bleu_ref, distribution_strategy)
 
   logging.info("Bleu score (uncased): %s", uncased_score)
   logging.info("Bleu score (cased): %s", cased_score)
   logging.info("Accuracy : %s", accuracy)
-  logging.info("Percent of examples which can be parse: %s", parseble_precentage)
+  logging.info("Rouge (Bigram): %s", bigram_rouge)
+  logging.info("Rouge (sentence_level): %s", rouge_sentence_level)
+  logging.info("Percent of examples which can be parsed: %s", parseble_precentage)
   return uncased_score, cased_score, accuracy
 
 
