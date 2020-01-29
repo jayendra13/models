@@ -75,13 +75,13 @@ def build_table(source_file, ref_file, prediction_file):
         for entry in row:
           with tag(stream, "td"):
             with tag(stream, "pre"):
-              stream.write(reverse_preprocessing(entry))
+              stream.write(reverse_preprocessing(entry.strip()))
 
       count += 1
       if count > 1000:
         break
     s = stream.getvalue()
-    stream.close()
+    # stream.close()
     return s
 
 
