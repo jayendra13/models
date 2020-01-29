@@ -25,6 +25,9 @@ def reverse_preprocessing(txt):
   txt = txt.replace('<SOS> ','')
   new_txt = txt.replace('<NEW_LINE>','\n')
   new_txt = new_txt.replace('<TAB>','    ')
+
+  lines = [line.strip() for line in new_txt.split("\n")]
+  new_txt = "\n".join(lines)
   return new_txt
 
 
