@@ -22,12 +22,9 @@ def process_text(code):
 
 
 def reverse_preprocessing(txt):
-  txt = txt.replace('<SOS> ','')
-  new_txt = txt.replace('<NEW_LINE>','\n')
+  new_txt = txt.replace('<SOS> ','')
   new_txt = new_txt.replace('<TAB>','    ')
-
-  lines = [line.strip() for line in new_txt.split("\n")]
-  new_txt = "\n".join(lines)
+  new_txt = new_txt.replace('<NEW_LINE>','\n')
   return new_txt
 
 
