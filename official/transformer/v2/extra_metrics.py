@@ -66,3 +66,15 @@ def bigram_rouge(prediction_file, bleu_ref, subtokenizer):
 def sentence_level_rouge(prediction_file, bleu_ref, subtokenizer):
   predicted_lines, gt_lines = encode_files_to_list(prediction_file, bleu_ref, subtokenizer)
   return metrics.rouge_l_sentence_level(predicted_lines, gt_lines)
+
+def exact_match(prediction_file,gt_file):
+  with open(prediction_file,'r') as f:
+    pred_lines = f.readlines()
+  with open(gt_file,'r') as f:
+    gt_lines = f.readlines()
+  exact_match_count = 0.0
+  for idx,pred in enumerate(pred_lines):
+    if pred == gt_lines[idx]:
+      exact_match_count += 1
+  return (exact_match_count/len(pred_lines))*100
+

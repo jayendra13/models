@@ -92,7 +92,7 @@ def translate_and_compute_metrics(model,
   parseble_precentage = extra_metrics.parseable_percentage(tmp_filename)
   rouge_bigram = extra_metrics.bigram_rouge(tmp_filename, bleu_ref, subtokenizer)
   rouge_sentence_level = extra_metrics.sentence_level_rouge(tmp_filename, bleu_ref, subtokenizer)
-
+  exact_match_percentage = extra_metrics.exact_match(tmp_filename,bleu_ref)
   logdir = os.path.join(params["model_dir"], "text")
   extra_utils.log_predictions_to_tensorboard(logdir, bleu_source, bleu_ref, tmp_filename)
   # Compute uncased and cased bleu scores.
@@ -100,7 +100,7 @@ def translate_and_compute_metrics(model,
   uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
   cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
   # os.remove(tmp_filename)
-  return uncased_score, cased_score, accuracy, parseble_precentage, rouge_bigram, rouge_sentence_level
+  return uncased_score, cased_score, accuracy, parseble_precentage, rouge_bigram, rouge_sentence_level, exact_match_percentage
 
 
 def evaluate_and_log_bleu(model,
@@ -127,7 +127,7 @@ def evaluate_and_log_bleu(model,
   # subtokenizer = tokenizer.Subtokenizer(vocab_file)
   subtokenizer = tokenizer.subtokenizer
 
-  uncased_score, cased_score, accuracy, parseble_precentage, bigram_rouge, rouge_sentence_level = \
+  uncased_score, cased_score, accuracy, parseble_precentage, bigram_rouge, rouge_sentence_level, exact_match_percentage = \
     translate_and_compute_metrics(
       model, params, subtokenizer, bleu_source, bleu_ref, distribution_strategy)
 
@@ -136,6 +136,7 @@ def evaluate_and_log_bleu(model,
   logging.info("Accuracy : %s", accuracy)
   logging.info("Rouge (Bigram): %s", bigram_rouge)
   logging.info("Rouge (sentence_level): %s", rouge_sentence_level)
+  logging.info("Percent of Exact match: %s", exact_match_percentage)
   logging.info("Percent of examples which can be parsed: %s", parseble_precentage)
   return uncased_score, cased_score, accuracy
 
@@ -291,7 +292,12 @@ class TransformerTask(object):
 
       def _step_fn(inputs):
         """Per-replica step function."""
+        print('Vocab size : ',params["vocab_size"])
+
         inputs, targets = inputs
+        print('Max input', tf.reduce_max(inputs))
+        import sys
+        sys.exit()
         with tf.GradientTape() as tape:
           logits = model([inputs, targets], training=True)
           loss = metrics.transformer_loss(logits, targets,
